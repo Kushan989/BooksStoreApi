@@ -2,6 +2,10 @@
 using BooksApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Hosting;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace BooksApi.Controllers
 {
@@ -11,9 +15,29 @@ namespace BooksApi.Controllers
     {
         private readonly BookService _bookService;
 
-        public BooksController(BookService bookService)
+        //public BooksController(BookService bookService)
+        //{
+        //    _bookService = bookService;
+        //}
+
+        private IHostingEnvironment hostingEnvironment;
+
+        public BooksController(BookService bookService,IHostingEnvironment environment)
         {
             _bookService = bookService;
+            hostingEnvironment = environment;
+        }
+
+        [HttpPost("UploadFile")]
+        public async Task<string> UploadFile([FromForm] IFormFile file)
+        {
+            string fName = file.FileName;
+            string path = Path.Combine(hostingEnvironment.ContentRootPath, "Images/" + file.FileName);
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            return "http://localhost:51369/Images/" + file.FileName;
         }
 
         [HttpGet]
